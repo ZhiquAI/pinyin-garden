@@ -1,0 +1,7 @@
+{
+  "provider": "Microsoft Edge neural TTS",
+  "voice": "zh-CN-XiaoxiaoNeural",
+  "rate": "-8%",
+  "count": 403,
+  "text": "Chinese word followed by a full stop"
+}
