@@ -2,6 +2,7 @@
 'use strict';
 (() => {
   const lessons = window.LESSONS;
+  const illustratedWords = new Set(['w001', 'w002', 'w003', 'w004', 'w005', 'w006', 'w007', 'w008', 'w009', 'w010', 'w012', 'w013', 'w014', 'w050']);
   const $ = id => document.getElementById(id);
   let day = 0;
   let index = 0;
@@ -74,7 +75,9 @@
     $('lesson-title').textContent = lesson.title;
     $('position').textContent = `${index + 1} / ${lesson.words.length}`;
     $('progress').style.width = `${(index + 1) / lesson.words.length * 100}%`;
-    $('picture').src = `assets/images/${word.id}.png`;
+    $('picture').src = illustratedWords.has(word.id)
+      ? `assets/illustrations/${word.id}.webp`
+      : `assets/images/${word.id}.png`;
     $('picture').alt = `${word.word}的词义提示图`;
     $('picture-button').setAttribute('aria-label', `朗读${word.word}`);
     window.PinyinGrid.setText($('pinyin'), word.pinyin);
