@@ -131,6 +131,33 @@
     if (event.code === 'ArrowLeft') { event.preventDefault(); select(day, index - 1); }
     if (event.code === 'ArrowRight') { event.preventDefault(); select(day, index + 1); }
   });
+
+  // 支持触屏手势：在卡片区域左右滑动切换词语
+  const cardElement = $('flashcard');
+  let touchStartX = 0;
+  let touchStartY = 0;
+  cardElement.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  cardElement.addEventListener('touchend', e => {
+    if (e.changedTouches.length !== 1) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX;
+    const deltaY = e.changedTouches[0].clientY - touchStartY;
+    // 水平滑动距离超过 45px，且水平位移明显大于垂直位移（避免影响上下滑动看网页）
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+      if (deltaX < 0) {
+        // 向左滑 -> 下一张
+        select(day, index + 1);
+      } else {
+        // 向右滑 -> 上一张
+        select(day, index - 1);
+      }
+    }
+  }, { passive: true });
   document.addEventListener('visibilitychange', () => { if (document.hidden && playing) stop('已暂停，点一下继续练习'); });
   window.addEventListener('pagehide', () => stop());
   render();
