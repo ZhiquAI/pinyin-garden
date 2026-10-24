@@ -100,10 +100,52 @@
     $('speak').setAttribute('aria-label', '朗读' + word.word);
     try { localStorage.setItem('pinyin-garden-position', JSON.stringify({day, index})); } catch { /* Local files can deny storage. */ }
   }
-  function select(newDay, newIndex) {
+  let animating = false;
+  function select(newDay, newIndex, direction = null) {
     if (!lessons[newDay]?.words[newIndex]) return;
+    if (newDay === day && newIndex === index) return;
     stop('先自己拼一拼，再听听发音');
-    day = newDay; index = newIndex; render();
+
+    // 确定翻页方向：1 为下一张（向左滑出，新卡片从右滑入）；-1 为上一张（向右滑出，新卡片从左滑入）
+    if (direction === null) {
+      if (newDay !== day) {
+        direction = newDay > day ? 1 : -1;
+      } else {
+        direction = newIndex > index ? 1 : -1;
+      }
+    }
+
+    const card = $('flashcard');
+    // 如果支持动画且用户未开启降低动态效果
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion || animating) {
+      day = newDay; index = newIndex; render();
+      return;
+    }
+
+    animating = true;
+    const outClass = direction > 0 ? 'slide-out-left' : 'slide-out-right';
+    const prepareClass = direction > 0 ? 'prepare-in-right' : 'prepare-in-left';
+
+    card.classList.add(outClass);
+
+    setTimeout(() => {
+      day = newDay;
+      index = newIndex;
+      render();
+
+      card.classList.remove(outClass);
+      card.classList.add(prepareClass);
+
+      // 触发重排，让 transition: none 的起点位置生效
+      void card.offsetWidth;
+
+      card.classList.remove(prepareClass);
+
+      setTimeout(() => {
+        animating = false;
+      }, 200);
+    }, 150);
   }
   lessons.forEach((lesson, i) => {
     const button = document.createElement('button');
