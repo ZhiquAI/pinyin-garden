@@ -287,10 +287,26 @@
     }
   };
 
-  // 支持触屏手势：在卡片区域左右滑动切换词语
+  // 支持触屏手势：在卡片区域左右滑动切换词语，以及双击卡片快速朗读
   const cardElement = $('flashcard');
   let touchStartX = 0;
   let touchStartY = 0;
+  let lastTapTime = 0;
+
+  function triggerCardPulse() {
+    cardElement.classList.remove('pulse-speak');
+    void cardElement.offsetWidth;
+    cardElement.classList.add('pulse-speak');
+  }
+
+  // 双击事件（桌面与部分触屏设备）
+  cardElement.addEventListener('dblclick', e => {
+    // 忽略具体按钮上的双击，避免与按钮本身的点击逻辑冲突
+    if (e.target.closest('button, select, input, a')) return;
+    triggerCardPulse();
+    start();
+  });
+
   cardElement.addEventListener('touchstart', e => {
     if (e.touches.length === 1) {
       touchStartX = e.touches[0].clientX;
@@ -302,6 +318,8 @@
     if (e.changedTouches.length !== 1) return;
     const deltaX = e.changedTouches[0].clientX - touchStartX;
     const deltaY = e.changedTouches[0].clientY - touchStartY;
+    const distance = Math.hypot(deltaX, deltaY);
+
     // 水平滑动距离超过 45px，且水平位移明显大于垂直位移（避免影响上下滑动看网页）
     if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
       if (deltaX < 0) {
@@ -311,6 +329,21 @@
         // 向右滑 -> 上一张
         select(day, index - 1);
       }
+      return;
+    }
+
+    // 双触（Double-tap）判定：移动距离微小（< 15px），且两次点击间隔在 40ms ~ 320ms 内
+    if (distance < 15) {
+      const now = Date.now();
+      if (now - lastTapTime > 40 && now - lastTapTime < 320) {
+        if (!e.target.closest('button, select, input, a')) {
+          triggerCardPulse();
+          start();
+          lastTapTime = 0;
+          return;
+        }
+      }
+      lastTapTime = now;
     }
   }, { passive: true });
   document.addEventListener('visibilitychange', () => { if (document.hidden && playing) stop('已暂停，点一下继续练习'); });

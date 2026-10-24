@@ -19,3 +19,13 @@
 .modal-desc{font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 26px}
 .modal-actions{display:flex;gap:12px;justify-content:center}
 .modal-actions button{flex:1;min-height:46px;font-size:14px;border-radius:12px}
+
+/* 小绿叶成长进度指示器与卡片居中微调 */
+.practice{display:flex;flex-direction:column;justify-content:center;min-height:560px}
+.flashcard{min-height:360px;padding:36px 12px 32px}
+.progress-track{height:8px;background:#e5ebd9;border-radius:10px;overflow:visible;position:relative;margin-bottom:12px}
+#progress{height:100%;background:linear-gradient(90deg,#93b378,#4a7c59);border-radius:10px;transition:width .35s cubic-bezier(.34,1.56,.64,1);position:relative}
+.sprout-icon{position:absolute;right:-10px;top:-13px;font-size:18px;line-height:1;filter:drop-shadow(0 2px 4px rgba(49,92,67,.2));transform:scale(1);transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+.flashcard:active{transform:scale(.995)}
+.flashcard.pulse-speak{animation:card-pulse .35s ease-out}
+@keyframes card-pulse{0%{transform:scale(1)}50%{transform:scale(1.012)}100%{transform:scale(1)}}
