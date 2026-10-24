@@ -145,14 +145,6 @@
         flower.remove();
       }
     });
-    $('words').replaceChildren(...lesson.words.map((w, i) => {
-      const b = document.createElement('button');
-      b.className = 'word-chip'; b.textContent = w.word;
-      b.setAttribute('aria-current', String(i === index));
-      b.setAttribute('aria-label', `选择${w.word}，${w.pinyin}`);
-      b.onclick = () => { select(day, i); };
-      return b;
-    }));
     $('speak').setAttribute('aria-label', '朗读' + word.word);
     try { localStorage.setItem('pinyin-garden-position', JSON.stringify({day, index})); } catch { /* Local files can deny storage. */ }
   }
