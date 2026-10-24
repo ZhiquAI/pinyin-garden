@@ -6,6 +6,44 @@
   const $ = id => document.getElementById(id);
   let day = 0;
   let index = 0;
+  let completedDays = new Set();
+  try {
+    const savedDays = JSON.parse(localStorage.getItem('pinyin-garden-completed') || '[]');
+    if (Array.isArray(savedDays)) completedDays = new Set(savedDays);
+  } catch {}
+
+  // 拟真轻柔微音效（Web Audio API，免加载外部音频文件，零体积）
+  let audioCtx = null;
+  function playPageTurnSound() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioCtx) audioCtx = new AudioCtx();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      // 轻微的柔和纸张摩擦/弹动声
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(140, audioCtx.currentTime + 0.08);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(800, audioCtx.currentTime);
+
+      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+    } catch {}
+  }
   try {
     const saved = JSON.parse(localStorage.getItem('pinyin-garden-position'));
     if (saved && Number.isInteger(saved.day) && lessons[saved.day] &&
@@ -61,6 +99,10 @@
           timer = setTimeout(playOnce, 1300);
         } else {
           stop(`已读完 ${readCount} 次，你也来读一遍吧！`);
+          // 朗读完后，如果刚好是当天的最后一个词，触发通关打卡
+          if (index === lessons[day].words.length - 1) {
+            checkDayCompletion();
+          }
         }
       };
       audio.onerror = fail;
@@ -88,7 +130,21 @@
     $('previous').disabled = index === 0;
     $('next').disabled = index === lesson.words.length - 1;
     $('day-select').value = day;
-    document.querySelectorAll('.day-button').forEach((b, i) => b.setAttribute('aria-current', String(i === day)));
+    document.querySelectorAll('.day-button').forEach((b, i) => {
+      b.setAttribute('aria-current', String(i === day));
+      let flower = b.querySelector('.completed-flower');
+      if (completedDays.has(i)) {
+        if (!flower) {
+          flower = document.createElement('span');
+          flower.className = 'completed-flower';
+          flower.setAttribute('aria-label', '已通关');
+          flower.textContent = '🌸';
+          b.append(flower);
+        }
+      } else if (flower) {
+        flower.remove();
+      }
+    });
     $('words').replaceChildren(...lesson.words.map((w, i) => {
       const b = document.createElement('button');
       b.className = 'word-chip'; b.textContent = w.word;
@@ -124,6 +180,7 @@
     }
 
     animating = true;
+    playPageTurnSound();
     const outClass = direction > 0 ? 'slide-out-left' : 'slide-out-right';
     const prepareClass = direction > 0 ? 'prepare-in-right' : 'prepare-in-left';
 
@@ -176,6 +233,67 @@
     if (event.code === 'ArrowLeft') { event.preventDefault(); select(day, index - 1); }
     if (event.code === 'ArrowRight') { event.preventDefault(); select(day, index + 1); }
   });
+
+  function playCelebrationSound() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioCtx) audioCtx = new AudioCtx();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      // 欢快的通关小三和弦 (C5 - E5 - G5 - C6)
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const start = audioCtx.currentTime + idx * 0.1;
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.08, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(start);
+        osc.stop(start + 0.35);
+      });
+    } catch {}
+  }
+
+  function checkDayCompletion() {
+    if (!completedDays.has(day)) {
+      completedDays.add(day);
+      try {
+        localStorage.setItem('pinyin-garden-completed', JSON.stringify([...completedDays]));
+      } catch {}
+      render();
+    }
+
+    // 显示通关弹窗
+    const modal = $('completion-modal');
+    $('modal-desc').textContent = `太棒啦！你已经读完了第 ${day + 1} 天「${lessons[day].title}」所有的词语，送你一朵小红花！🌸`;
+    modal.classList.remove('hidden');
+    playCelebrationSound();
+  }
+
+  $('modal-replay').onclick = () => {
+    $('completion-modal').classList.add('hidden');
+    select(day, 0);
+  };
+
+  $('modal-next-day').onclick = () => {
+    $('completion-modal').classList.add('hidden');
+    if (day < lessons.length - 1) {
+      select(day + 1, 0);
+    } else {
+      select(0, 0);
+    }
+  };
+
+  $('completion-modal').onclick = e => {
+    if (e.target === $('completion-modal')) {
+      $('completion-modal').classList.add('hidden');
+    }
+  };
 
   // 支持触屏手势：在卡片区域左右滑动切换词语
   const cardElement = $('flashcard');

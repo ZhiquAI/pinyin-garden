@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>拼音小花园 · 看图读拼音</title>
-<link rel="stylesheet" href="style.css?v=pinyin-large-1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="拼音小花园">
+<meta name="theme-color" content="#315c43">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css?v=storybook-pwa-1">
 <link rel="stylesheet" href="pinyin-grid.css?v=2">
 </head>
 <body>
@@ -26,5 +33,19 @@
 </section></div>
 <p class="footer">配图为词义提示图标，抽象词语请结合汉字理解。<span>小提示：← → 切换 · 空格朗读 / 停止</span></p>
 </main></div>
+
+<!-- 通关小红花结算弹窗 -->
+<div id="completion-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-card">
+    <div class="modal-confetti" aria-hidden="true">🎉 🌸 ✨ 🌸 🎉</div>
+    <div class="modal-flower" aria-hidden="true">💮</div>
+    <h3 id="modal-title">太棒啦！通关啦！</h3>
+    <p id="modal-desc" class="modal-desc">你已经读完了今天所有的词语，送你一朵小红花！</p>
+    <div class="modal-actions">
+      <button id="modal-replay" class="secondary">再练一遍</button>
+      <button id="modal-next-day" class="next">开始下一天 →</button>
+    </div>
+  </div>
+</div>
 <script src="data.js"></script><script src="pinyin-grid.js?v=1"></script><script src="app.js?v=storybook-20261023"></script>
 </body></html>
